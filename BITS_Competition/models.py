@@ -6,13 +6,17 @@ from django.contrib.auth.models import User
 class hostel(models.Model):
     name = models.CharField(max_length=100)
 
+class organiser(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    handle = models.CharField(max_length=100)
+    admin = models.BooleanField(default=False)
+
 class participant(models.Model):
     handle = models.CharField(max_length=100)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     hostel = models.ForeignKey(hostel, on_delete=models.CASCADE)
 
 class mission(models.Model):
-    name = models.CharField(max_length=100)
     brief = models.TextField()
     points = models.IntegerField()
     Codename = models.CharField(max_length=100)
