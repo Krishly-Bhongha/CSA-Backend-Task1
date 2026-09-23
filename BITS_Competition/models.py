@@ -5,6 +5,8 @@ from django.contrib.auth.models import User
 
 class hostel(models.Model):
     name = models.CharField(max_length=100)
+    score = models.IntegerField(default=0)
+    crcked_missions = models.ManyToManyField('mission', blank=True)
 
 class organiser(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
