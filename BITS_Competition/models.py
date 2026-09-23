@@ -27,7 +27,11 @@ class mission(models.Model):
     Deadline = models.DateTimeField()
     participant = models.ForeignKey(participant, on_delete=models.DO_NOTHING, null=True, blank=True,default=None)
 
-
+__all__ = [
+    name for name in globals()
+    if not name.startswith("_")
+    and name not in ("models", "User")
+]
 
 
     
