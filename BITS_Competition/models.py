@@ -20,7 +20,7 @@ class mission(models.Model):
     brief = models.TextField()
     points = models.IntegerField()
     Codename = models.CharField(max_length=100)
-    Difficulty = models.IntegerField()
+    Difficulty = models.CharField(max_length=100)
     Status = models.CharField(max_length=100)
     Deadline = models.DateTimeField()
     participant = models.ForeignKey(participant, on_delete=models.DO_NOTHING, null=True, blank=True,default=None)

@@ -15,7 +15,7 @@ def complete(mission_id, participant):
         mission = mission.objects.get(id=mission_id)
     except mission.DoesNotExist:
         return Response({'error': 'Mission not found'}, status=status.HTTP_404_NOT_FOUND)
-    
+
     if mission.participant != participant:
         return Response({'error': 'This mission is not assigned to this participant'}, status=status.HTTP_400_BAD_REQUEST)
     

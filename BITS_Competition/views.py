@@ -1,4 +1,6 @@
 from rest_framework.decorators import action
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter
 
 from .models import*
 from .serializers import*
@@ -31,6 +33,11 @@ class HostelViewSet(viewsets.ModelViewSet):
 class MissionViewSet(viewsets.ModelViewSet):    
     queryset = mission.objects.all()
     serializer_class = missionSerializer
+
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_fields = ["status", "difficulty", "hostel"]
+    search_fields = ["Codename", "brief"]
+
     if request.method in ('POST','PUT','PATCH','DELETE'):
         permission_classes = [IsSuperUser]
 
@@ -49,7 +56,10 @@ class participantViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'], url_path='missions', url_name='missions')
     def get_missions(self, request, pk=None):
         participant = self.get_object()
+        time = request.data.get('current_time')
         missions = mission.objects.filter(participant=participant)
+        for mission in missions:
+            expiration(time, mission)
         serializer = missionSerializer(missions, many=True)
         return Response(serializer.data)
     
@@ -57,12 +67,14 @@ class participantViewSet(viewsets.ModelViewSet):
     def claim_mission(self, request, pk=None):
         participant = self.get_object()
         mission_id = request.data.get('mission_id')
+        expiration(request.data.get('current_time'), mission.objects.get(id=mission_id))
         return claim(mission_id, participant)
     
     @action(detail=True, methods=['post'], url_path='complete-mission', url_name='complete-mission')
     def complete_mission(self, request, pk=None):
         participant = self.get_object()
         mission_id = request.data.get('mission_id')
+        expiration(request.data.get('current_time'), mission.objects.get(id=mission_id))
         return complete(mission_id, participant)
     
 class organiserViewSet(viewsets.ModelViewSet):
