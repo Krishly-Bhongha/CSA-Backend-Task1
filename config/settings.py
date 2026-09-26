@@ -138,4 +138,8 @@ REST_FRAMEWORK = {
         "rest_framework.pagination.PageNumberPagination",
 
     "PAGE_SIZE": 10,
+
+    "DEFAULT_THROTTLE_RATES": {
+        "mission_claim": "5/minute",
+    },
 }

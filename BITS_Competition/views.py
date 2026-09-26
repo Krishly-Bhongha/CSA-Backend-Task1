@@ -2,6 +2,7 @@ from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
 
+from .throttles import MissionClaimThrottle
 from .models import*
 from .serializers import*
 from .permissions import *
@@ -35,7 +36,7 @@ class MissionViewSet(viewsets.ModelViewSet):
     serializer_class = missionSerializer
 
     filter_backends = [DjangoFilterBackend, SearchFilter]
-    filterset_fields = ["status", "difficulty", "hostel"]
+    filterset_fields = ["Status", "Difficulty", "participant__hostel__name"]
     search_fields = ["Codename", "brief"]
 
     if request.method in ('POST','PUT','PATCH','DELETE'):
@@ -63,7 +64,7 @@ class participantViewSet(viewsets.ModelViewSet):
         serializer = missionSerializer(missions, many=True)
         return Response(serializer.data)
     
-    @action(detail=True, methods=['post'], url_path='claim-mission', url_name='claim-mission')
+    @action(detail=True, methods=['post'], url_path='claim-mission', url_name='claim-mission',throttle_classes=[MissionClaimThrottle])
     def claim_mission(self, request, pk=None):
         participant = self.get_object()
         mission_id = request.data.get('mission_id')
@@ -87,3 +88,10 @@ class organiserViewSet(viewsets.ModelViewSet):
         organiser = self.get_object()
         return promote(organiser)
 
+__all__ = [
+    "leaderboardViewSet",
+    "HostelViewSet",
+    "MissionViewSet",
+    "participantViewSet",
+    "organiserViewSet"
+]
