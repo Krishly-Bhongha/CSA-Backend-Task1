@@ -26,7 +26,15 @@ class crackedMissionSerializer(serializers.ModelSerializer):
         fields = ['id','Codename','points']
         
 class hostelSerializer(serializers.ModelSerializer):
-    cracked_missions = crackedMissionSerializer(many=True, read_only=True)
+    cracked_missions = serializers.SerializerMethodField()
+    score = serializers.SerializerMethodField()
+
+    def get_score(self, obj):
+        return mission.objects.filter(participant__hostel=obj, Status='cracked').aggregate(total_score=serializers.Sum('points'))['hostel_score'] or 0
+    def get_cracked_missions(self, obj):
+        cracked_missions = mission.objects.filter(participant__hostel=obj, Status='cracked')
+        return crackedMissionSerializer(cracked_missions, many=True).data
+    
     class Meta: 
         model = hostel
         fields = ['id', 'name', 'score','cracked_missions']
@@ -46,6 +54,16 @@ class organiserSerializer(serializers.ModelSerializer):
     class Meta:
         model = organiser
         fields = ['id','admin','handle', 'user']
+        read_only_fields = ['id']
+
+class leaderboardSerializer(serializers.ModelSerializer):
+    score = serializers.SerializerMethodField()
+    def get_score(self, obj):
+        return mission.objects.filter(participant__hostel=obj, Status='cracked').aggregate(total_score=serializers.Sum('points'))['hostel_score'] or 0
+
+    class Meta: 
+        model = hostel
+        fields = ['id', 'name', 'score']
         read_only_fields = ['id']
 
 __all__ = [

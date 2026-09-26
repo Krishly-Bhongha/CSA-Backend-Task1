@@ -26,11 +26,6 @@ def complete(mission_id, participant):
     mission.Status = 'cracked'
     mission.save()
     
-    # Update the hostel's score
-    participant.hostel.score += mission.points
-    participant.hostel.save()
-    participant.hostel.crcked_missions.add(mission)
-    
     return Response({'message': 'Mission completed successfully'}, status=status.HTTP_200_OK)
 
 def claim(mission_id, participant):
@@ -47,6 +42,7 @@ def claim(mission_id, participant):
     
     # Assign the mission to the participant
     mission.participant = participant
+    mission.Status = 'in_progress'
     mission.save()
     
     return Response({'message': 'Mission claimed successfully'}, status=status.HTTP_200_OK)

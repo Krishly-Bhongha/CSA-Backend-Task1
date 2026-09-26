@@ -5,6 +5,23 @@ from .serializers import*
 from .permissions import *
 from .services import *
 
+class leaderboardViewSet(viewsets.ViewSet):
+    queryset = None
+    serializer_class = leaderboardSerializer
+    if request.method not in ('GET','RETRIEVE'):
+        permission_classes = [IsSuperUser]
+
+    def list(self, request):
+        hostels = hostel.objects.all()
+        serializer = leaderboardSerializer(hostels, many=True)
+
+        leaderboard = sorted(
+        serializer.data,
+        key=lambda x: x["score"],
+        reverse=True
+        )
+        return Response(leaderboard)
+
 class HostelViewSet(viewsets.ModelViewSet):
     queryset = hostel.objects.all()
     serializer_class = hostelSerializer
@@ -26,8 +43,15 @@ class MissionViewSet(viewsets.ModelViewSet):
 class participantViewSet(viewsets.ModelViewSet):
     queryset = participant.objects.all()
     serializer_class = participantSerializer
-    if request.method not in ('POST','GET'):
+    if request.method not in ('POST','GET','RETRIEVE'):
         permission_classes = [IsSelf | IsSuperUser]
+
+    @action(detail=True, methods=['get'], url_path='missions', url_name='missions')
+    def get_missions(self, request, pk=None):
+        participant = self.get_object()
+        missions = mission.objects.filter(participant=participant)
+        serializer = missionSerializer(missions, many=True)
+        return Response(serializer.data)
     
     @action(detail=True, methods=['post'], url_path='claim-mission', url_name='claim-mission')
     def claim_mission(self, request, pk=None):
