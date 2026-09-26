@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'BITS_Competition',
     'rest_framework',
     "django_filters",
+    "drf_spectacular",
 ]
 
 MIDDLEWARE = [
@@ -130,6 +131,9 @@ MAILERS = {
 }
 
 REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS":
+    "drf_spectacular.openapi.AutoSchema",
+    
     "DEFAULT_FILTER_BACKENDS": [
         "django_filters.rest_framework.DjangoFilterBackend",
     ],
