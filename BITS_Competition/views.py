@@ -1,62 +1,53 @@
-from rest_framework import viewsets,status
 from rest_framework.decorators import action
-from rest_framework.response import Response
 
 from .models import*
 from .serializers import*
 from .permissions import *
+from .services import *
 
 class HostelViewSet(viewsets.ModelViewSet):
     queryset = hostel.objects.all()
     serializer_class = hostelSerializer
-    if request.method != 'GET':
+    if request.method in ('POST','PUT','PATCH','DELETE'):
         permission_classes = [IsSuperUser]
 
 class MissionViewSet(viewsets.ModelViewSet):    
     queryset = mission.objects.all()
     serializer_class = missionSerializer
-    if request.method != 'GET':
+    if request.method in ('POST','PUT','PATCH','DELETE'):
         permission_classes = [IsSuperUser]
 
+    @action(detail=True, methods=['post'], url_path='expiry', url_name='expiry')
+    def check_expiration(self, request, pk=None):
+        time = request.data.get('current_time')
+        mission = self.get_object()
+        return expiration(time, mission)
+        
 class participantViewSet(viewsets.ModelViewSet):
     queryset = participant.objects.all()
     serializer_class = participantSerializer
-    if request.method not in ('GET','POST'):
-        permission_classes = [IsSuperUser]
-    @action(detail=True, methods=['get'], url_path='missions', url_name='missions')
-
-    def get_missions(self, request, pk=None):
-        participant = self.get_object()
-        missions = mission.objects.filter(participant=participant)
-        serializer = missionSerializer(missions, many=True)
-        return Response(serializer.data)
+    if request.method not in ('POST','GET'):
+        permission_classes = [IsSelf | IsSuperUser]
     
+    @action(detail=True, methods=['post'], url_path='claim-mission', url_name='claim-mission')
+    def claim_mission(self, request, pk=None):
+        participant = self.get_object()
+        mission_id = request.data.get('mission_id')
+        return claim(mission_id, participant)
+    
+    @action(detail=True, methods=['post'], url_path='complete-mission', url_name='complete-mission')
     def complete_mission(self, request, pk=None):
         participant = self.get_object()
         mission_id = request.data.get('mission_id')
-        try:
-            mission = mission.objects.get(id=mission_id)
-        except mission.DoesNotExist:
-            return Response({'error': 'Mission not found'}, status=status.HTTP_404_NOT_FOUND)
-        
-        if mission.participant != participant:
-            return Response({'error': 'This mission is not assigned to this participant'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        if mission.Status == 'cracked':
-            return Response({'error': 'This mission is already completed'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Mark the mission as completed
-        mission.Status = 'Completed'
-        mission.save()
-        
-        # Update the hostel's score
-        participant.hostel.score += mission.points
-        participant.hostel.save()
-        participant.hostel.crcked_missions.add(mission)
-        
-        return Response({'message': 'Mission completed successfully'}, status=status.HTTP_200_OK)
+        return complete(mission_id, participant)
     
 class organiserViewSet(viewsets.ModelViewSet):
     queryset = organiser.objects.all()
     serializer_class = organiserSerializer
     permission_classes = [IsAdmin]
+
+    @action(detail=True, methods=['post'], url_path='missions', url_name='missions')
+    def promote_to_admin(self, request, pk=None):
+        organiser = self.get_object()
+        return promote(organiser)
+
